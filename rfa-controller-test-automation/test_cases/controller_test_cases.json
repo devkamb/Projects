@@ -1,0 +1,196 @@
+[
+  {
+    "name": "nominal_auto_height_control",
+    "requirement_ids": ["CTRL-AUTO-001", "CTRL-HYD-002"],
+    "description": "Controller boots, enters automatic mode, raises implement, holds height, and stops.",
+    "steps": [
+      {
+        "command": "boot",
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE",
+          "reason": "boot_complete"
+        }
+      },
+      {
+        "command": "start_auto",
+        "sensors": {
+          "engine_rpm": 1250,
+          "hydraulic_pressure_psi": 2400,
+          "steering_angle_deg": 3,
+          "implement_height_pct": 45
+        },
+        "expect": {
+          "accepted": true,
+          "mode": "ACTIVE",
+          "reason": "auto_started",
+          "outputs_contains": {
+            "auto_enabled": true,
+            "valve_pwm": 45
+          }
+        }
+      },
+      {
+        "command": "raise",
+        "sensors": {
+          "engine_rpm": 1240,
+          "hydraulic_pressure_psi": 2500,
+          "steering_angle_deg": 4,
+          "implement_height_pct": 45
+        },
+        "expect": {
+          "accepted": true,
+          "mode": "ACTIVE",
+          "reason": "raise_accepted",
+          "outputs_contains": {
+            "target_height_pct": 50,
+            "valve_pwm": 60
+          }
+        }
+      },
+      {
+        "command": "hold",
+        "sensors": {
+          "engine_rpm": 1230,
+          "hydraulic_pressure_psi": 2480,
+          "steering_angle_deg": 4,
+          "implement_height_pct": 50
+        },
+        "expect": {
+          "accepted": true,
+          "mode": "ACTIVE",
+          "reason": "hold_accepted",
+          "outputs_contains": {
+            "target_height_pct": 50,
+            "valve_pwm": 0
+          }
+        }
+      },
+      {
+        "command": "stop_auto",
+        "sensors": {
+          "engine_rpm": 1200,
+          "hydraulic_pressure_psi": 2450,
+          "steering_angle_deg": 2,
+          "implement_height_pct": 50
+        },
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE",
+          "reason": "auto_stopped"
+        }
+      }
+    ]
+  },
+  {
+    "name": "emergency_stop_fault_latch",
+    "requirement_ids": ["CTRL-SAFE-001", "CTRL-SAFE-002"],
+    "description": "Emergency stop forces FAULT state and requires explicit clear before auto can restart.",
+    "steps": [
+      {
+        "command": "boot",
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE"
+        }
+      },
+      {
+        "command": "start_auto",
+        "sensors": {
+          "engine_rpm": 1300,
+          "hydraulic_pressure_psi": 2300,
+          "steering_angle_deg": 0,
+          "implement_height_pct": 40,
+          "e_stop": true
+        },
+        "expect": {
+          "accepted": false,
+          "mode": "FAULT",
+          "reason": "emergency_stop_active",
+          "faults_contains": ["emergency_stop_active"]
+        }
+      },
+      {
+        "command": "start_auto",
+        "sensors": {
+          "engine_rpm": 1300,
+          "hydraulic_pressure_psi": 2300,
+          "steering_angle_deg": 0,
+          "implement_height_pct": 40,
+          "e_stop": false
+        },
+        "expect": {
+          "accepted": false,
+          "mode": "FAULT",
+          "reason": "fault_latched"
+        }
+      },
+      {
+        "command": "clear_faults",
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE",
+          "reason": "faults_cleared"
+        }
+      }
+    ]
+  },
+  {
+    "name": "hydraulic_pressure_rejects_auto",
+    "requirement_ids": ["CTRL-HYD-001"],
+    "description": "High hydraulic pressure prevents automatic mode and records a fault.",
+    "steps": [
+      {
+        "command": "boot",
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE"
+        }
+      },
+      {
+        "command": "start_auto",
+        "sensors": {
+          "engine_rpm": 1250,
+          "hydraulic_pressure_psi": 3300,
+          "steering_angle_deg": 1,
+          "implement_height_pct": 55
+        },
+        "expect": {
+          "accepted": false,
+          "mode": "FAULT",
+          "reason": "hydraulic_pressure_high",
+          "faults_contains": ["hydraulic_pressure_high"]
+        }
+      }
+    ]
+  },
+  {
+    "name": "low_rpm_prevents_auto_engagement",
+    "requirement_ids": ["CTRL-AUTO-002"],
+    "description": "Automatic mode is rejected if the engine RPM precondition is not met.",
+    "steps": [
+      {
+        "command": "boot",
+        "expect": {
+          "accepted": true,
+          "mode": "IDLE"
+        }
+      },
+      {
+        "command": "start_auto",
+        "sensors": {
+          "engine_rpm": 700,
+          "hydraulic_pressure_psi": 2200,
+          "steering_angle_deg": 2,
+          "implement_height_pct": 50
+        },
+        "expect": {
+          "accepted": false,
+          "mode": "FAULT",
+          "reason": "engine_rpm_too_low_for_auto",
+          "faults_contains": ["engine_rpm_too_low_for_auto"]
+        }
+      }
+    ]
+  }
+]

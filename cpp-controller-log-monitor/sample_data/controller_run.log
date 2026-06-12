@@ -1,0 +1,11 @@
+2026-06-12T10:00:00.000Z INFO CTRL boot complete
+2026-06-12T10:00:00.100Z INFO CTRL auto mode requested
+2026-06-12T10:00:00.200Z INFO NETWORK heartbeat received controller=steering
+2026-06-12T10:00:00.300Z WARN NETWORK missed heartbeat controller=steering count=1
+2026-06-12T10:00:00.400Z INFO HYDRAULIC pressure stable psi=2400
+2026-06-12T10:00:00.500Z WARN NETWORK missed heartbeat controller=steering count=2
+2026-06-12T10:00:00.600Z ERROR HYDRAULIC pressure high psi=3400
+2026-06-12T10:00:00.700Z ERROR CTRL entered fault state reason=hydraulic_pressure_high
+this line is intentionally malformed
+2026-06-12T10:00:00.800Z INFO CTRL operator cleared fault
+2026-06-12T10:00:00.900Z INFO CTRL returned to idle
